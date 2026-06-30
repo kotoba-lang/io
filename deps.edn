@@ -1,0 +1,12 @@
+{:paths ["src"]
+ ;; kotoba-lang/io — Layer 3 (I/O) of the kotoba foundational stdlib.
+ ;; IReader/IWriter protocols (host-injected) + a pure byte-buffer + copy.
+ ;; The streaming abstraction the other libs and actors re-roll, in one place.
+ ;; Zero third-party runtime deps; .cljc. See ADR-kotoba-lang-foundational-stdlib.md.
+ :deps {}
+ :aliases
+ {:test {:extra-paths ["test"]
+         :extra-deps {io.github.cognitect-labs/test-runner
+                      {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+         :main-opts ["-m" "cognitect.test-runner"]
+         :exec-fn cognitect.test-runner.api/test}}}
