@@ -46,3 +46,24 @@
     (is (= 1 (count (io/reader-seq (mk)))))
     (let [s (io/reader-seq (mk))]
       (is (= [7 8] (map int (seq (first s))))))))
+
+(deftest copy-on-eof-reader-is-no-op
+  ;; a reader that is already at EOF yields nothing; copy is a no-op
+  (let [eof (reify io/IReader (read! [_] nil))
+        dst (io/byte-buffer)
+        w   (io/buffer-writer dst)]
+    (io/copy eof w)
+    (is (zero? (io/len dst)))))
+
+(deftest write-ordering-preserved
+  (let [dst (io/byte-buffer)
+        w   (io/buffer-writer dst)]
+    (io/write! w (byte-arr [1 2]))
+    (io/write! w (byte-arr [3]))
+    (io/write! w (byte-arr [4 5 6]))
+    (is (= [1 2 3 4 5 6] (map int (seq (io/to-bytes dst)))))))
+
+(deftest empty-buffer-to-bytes
+  (let [buf (io/byte-buffer)
+        arr (io/to-bytes buf)]
+    (is (zero? #?(:clj (alength arr) :cljs (.-length arr))))))
