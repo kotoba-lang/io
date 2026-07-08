@@ -2,7 +2,11 @@
   (:require [clojure.test :refer [deftest is testing]]
             [kotoba.lang.io :as io]))
 
-(defn- byte-arr [coll] (byte-array (map unchecked-byte coll)))
+(defn- byte-arr [coll]
+  #?(:clj (byte-array (map unchecked-byte coll))
+     :cljs (let [arr (js/Uint8Array. (count coll))]
+             (doseq [[i b] (map-indexed vector coll)] (aset arr i b))
+             arr)))
 
 (deftest byte-buffer-put-and-len
   (let [buf (io/byte-buffer)]
