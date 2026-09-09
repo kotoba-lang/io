@@ -8,15 +8,27 @@
   the endpoints.
 
   Zero third-party runtime deps; .cljc (JVM / SCI / CLJS / GraalVM / kotoba-WASM)."
-  (:refer-clojure :exclude [read write]))
+  (:refer-clojure :exclude [read write])
+  (:require [kotoba.io.reader :as reader-p]
+            [kotoba.io.writer :as writer-p]))
 
 ;; ---------- protocols ----------
 
-(defprotocol IReader
-  (read! [reader] "Return the next chunk (a byte array) or nil at EOF."))
+(def IReader
+  "The protocol itself lives in one repo of its own now. This name is that
+  SAME protocol, not a second one: an implementation reified against either
+  is accepted by both (ADR-2609091900)."
+  reader-p/Reader)
 
-(defprotocol IWriter
-  (write! [writer chunk] "Append `chunk` (a byte array). Returns nil."))
+(def read! reader-p/read!)
+
+(def IWriter
+  "The protocol itself lives in one repo of its own now. This name is that
+  SAME protocol, not a second one: an implementation reified against either
+  is accepted by both (ADR-2609091900)."
+  writer-p/Writer)
+
+(def write! writer-p/write!)
 
 ;; ---------- pure byte-buffer ----------
 
