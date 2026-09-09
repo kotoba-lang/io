@@ -5,67 +5,37 @@
  ;; The streaming abstraction the other libs and actors re-roll, in one place.
  ;; Zero third-party runtime deps; .cljc. See ADR-kotoba-lang-foundational-stdlib.md.
  :deps {
-        io.github.kotoba-lang/kotoba-io-ireader
-        {:git/url "https://github.com/kotoba-lang/kotoba-io-ireader.git"
-         :git/sha "4f7d25cd73137e772510127e990ff1ec7ebb75bd"}
-        io.github.kotoba-lang/kotoba-io-iwriter
-        {:git/url "https://github.com/kotoba-lang/kotoba-io-iwriter.git"
-         :git/sha "ec6f173d42c28eb4b8746f49b07b3c41c59da5e9"}
+        io.github.kotoba-lang/kotoba-io-reader
+        {:git/url "https://github.com/kotoba-lang/kotoba-io-reader.git"
+         :git/sha "a1a1351ed58f2db0d26ea98a03c6155c0baa8563"}
+        io.github.kotoba-lang/kotoba-io-writer
+        {:git/url "https://github.com/kotoba-lang/kotoba-io-writer.git"
+         :git/sha "bf3e4c3a5c0aaf801f5833b039438d8fe8268bc9"}
         io.github.kotoba-lang/kotoba-io-buffer-writer
         {:git/url "https://github.com/kotoba-lang/kotoba-io-buffer-writer.git"
-         :git/sha "1806c47e4f5aa300f52a19fdb0d85ae1a28ef75f"}
+         :git/sha "3eed4760fc84bf5ca2b7ca3b9dc467b0e065d8d7"}
         io.github.kotoba-lang/kotoba-io-byte-buffer
         {:git/url "https://github.com/kotoba-lang/kotoba-io-byte-buffer.git"
-         :git/sha "18225d0dc3ba1f468bc20a906932a02fe20a51e6"}
+         :git/sha "239cc81560e0688fc9533684a606010d65750325"}
         io.github.kotoba-lang/kotoba-io-copy
         {:git/url "https://github.com/kotoba-lang/kotoba-io-copy.git"
-         :git/sha "86d3d5e9d339a172ded4bced24be14ffe1805dab"}
+         :git/sha "3938fa941a42ddf35a3e73cb7ba959cd2e589cb2"}
         io.github.kotoba-lang/kotoba-io-len
         {:git/url "https://github.com/kotoba-lang/kotoba-io-len.git"
-         :git/sha "a9ece7461da1ebf6e146ae9ac1561bafcfd6fd06"}
+         :git/sha "d1578506df867d50b399318504a09f882eed5cf7"}
         io.github.kotoba-lang/kotoba-io-put
         {:git/url "https://github.com/kotoba-lang/kotoba-io-put.git"
-         :git/sha "0a938594db2ed1dd60eafb5e2c5abed21cc21071"}
+         :git/sha "186ceb28a2f8efe45580810079267eaddbb89d2f"}
         io.github.kotoba-lang/kotoba-io-reader-buffer
         {:git/url "https://github.com/kotoba-lang/kotoba-io-reader-buffer.git"
-         :git/sha "15660040adba9beb08f414f05b83602c380c4ecb"}
+         :git/sha "b48e4b31779eeacc425cd51be941ae00f2272472"}
         io.github.kotoba-lang/kotoba-io-reader-seq
         {:git/url "https://github.com/kotoba-lang/kotoba-io-reader-seq.git"
-         :git/sha "84188989b1a4f8a586383a00e3168fc45aa8aac2"}
+         :git/sha "2e2ec2b66fb644ac61c565ff6eb6872ab530786b"}
         io.github.kotoba-lang/kotoba-io-to-bytes
         {:git/url "https://github.com/kotoba-lang/kotoba-io-to-bytes.git"
-         :git/sha "aa3a74bd76bd25306462be6ae3765fcabfc9ffb7"}
+         :git/sha "bc953d18f3aa2cf29c221f9a86e9e680d6e2f920"}
 
-        io.github.kotoba-lang/io-ireader
-        {:git/url "https://github.com/kotoba-lang/io-ireader.git"
-         :git/sha "b842f63c8d312bd724dbafd92fba276cc3dcb689"}
-        io.github.kotoba-lang/io-iwriter
-        {:git/url "https://github.com/kotoba-lang/io-iwriter.git"
-         :git/sha "8f542bc4f50b67c49fabbbcc1806d7ec8d64d538"}
-        io.github.kotoba-lang/io-buffer-writer
-        {:git/url "https://github.com/kotoba-lang/io-buffer-writer.git"
-         :git/sha "c333eb123d0c50fffad65b89e7a8ad1069c2a2fe"}
-        io.github.kotoba-lang/io-byte-buffer
-        {:git/url "https://github.com/kotoba-lang/io-byte-buffer.git"
-         :git/sha "8e6d6d0b4a332c67a529c0956f787b1728733126"}
-        io.github.kotoba-lang/io-copy
-        {:git/url "https://github.com/kotoba-lang/io-copy.git"
-         :git/sha "b6f35174f4a6f9b4c7a051b611f02b829d294df5"}
-        io.github.kotoba-lang/io-len
-        {:git/url "https://github.com/kotoba-lang/io-len.git"
-         :git/sha "b66bd615ac613a0961138175e66a52cc7096c939"}
-        io.github.kotoba-lang/io-put
-        {:git/url "https://github.com/kotoba-lang/io-put.git"
-         :git/sha "a596965da23c620c16cfd28b210a0ca767dff097"}
-        io.github.kotoba-lang/io-reader-buffer
-        {:git/url "https://github.com/kotoba-lang/io-reader-buffer.git"
-         :git/sha "4a2768aed704074815e9488a73e0daf0c073ddb6"}
-        io.github.kotoba-lang/io-reader-seq
-        {:git/url "https://github.com/kotoba-lang/io-reader-seq.git"
-         :git/sha "d51d2ab2a138423930aba88cbc2883505552892d"}
-        io.github.kotoba-lang/io-to-bytes
-        {:git/url "https://github.com/kotoba-lang/io-to-bytes.git"
-         :git/sha "7a6920b80425c9b1004cff29f2c02d090844d2e3"}
 }
  :aliases
  {:test {:extra-paths ["test"]

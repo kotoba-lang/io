@@ -1,7 +1,7 @@
 (ns kotoba.io-test
   (:require [clojure.test :refer [deftest is testing]]
             [kotoba.io :as io]
-            [kotoba.io.ireader]))
+            [kotoba.io.reader]))
 
 (defn- byte-arr [coll]
   #?(:clj (byte-array (map unchecked-byte coll))
@@ -54,7 +54,7 @@
 
 (deftest copy-on-eof-reader-is-no-op
   ;; a reader that is already at EOF yields nothing; copy is a no-op
-  (let [eof (reify kotoba.io.ireader/IReader (read! [_] nil))
+  (let [eof (reify kotoba.io.reader/Reader (read! [_] nil))
         dst (io/byte-buffer)
         w   (io/buffer-writer dst)]
     (io/copy eof w)

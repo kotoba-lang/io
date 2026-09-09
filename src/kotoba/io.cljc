@@ -4,8 +4,8 @@
   This namespace holds no implementation. It re-exports the definitions
   that each live in their own repo, so a call site can require one name
   and a library can require only the definitions it actually uses."
-  (:require [kotoba.io.ireader :as ireader-ns]
-            [kotoba.io.iwriter :as iwriter-ns]
+  (:require [kotoba.io.reader :as ireader-ns]
+            [kotoba.io.writer :as iwriter-ns]
             [kotoba.io.buffer-writer :as buffer-writer-ns]
             [kotoba.io.byte-buffer :as byte-buffer-ns]
             [kotoba.io.copy :as copy-ns]
@@ -20,8 +20,8 @@
 (def copy "See kotoba.io.copy/copy." copy-ns/copy)
 (def len "See kotoba.io.len/len." len-ns/len)
 (def put "See kotoba.io.put/put." put-ns/put)
-(def read! "See kotoba.io.ireader/read!." ireader-ns/read!)
+(def read! "See kotoba.io.reader/read!." ireader-ns/read!)
 (def reader-buffer "See kotoba.io.reader-buffer/reader-buffer." reader-buffer-ns/reader-buffer)
 (def reader-seq "See kotoba.io.reader-seq/reader-seq." reader-seq-ns/reader-seq)
 (def to-bytes "See kotoba.io.to-bytes/to-bytes." to-bytes-ns/to-bytes)
-(def write! "See kotoba.io.iwriter/write!." iwriter-ns/write!)
+(def write! "See kotoba.io.writer/write!." iwriter-ns/write!)
