@@ -4,7 +4,38 @@
  ;; IReader/IWriter protocols (host-injected) + a pure byte-buffer + copy.
  ;; The streaming abstraction the other libs and actors re-roll, in one place.
  ;; Zero third-party runtime deps; .cljc. See ADR-kotoba-lang-foundational-stdlib.md.
- :deps {}
+ :deps {
+        io.github.kotoba-lang/io-ireader
+        {:git/url "https://github.com/kotoba-lang/io-ireader.git"
+         :git/sha "b842f63c8d312bd724dbafd92fba276cc3dcb689"}
+        io.github.kotoba-lang/io-iwriter
+        {:git/url "https://github.com/kotoba-lang/io-iwriter.git"
+         :git/sha "8f542bc4f50b67c49fabbbcc1806d7ec8d64d538"}
+        io.github.kotoba-lang/io-buffer-writer
+        {:git/url "https://github.com/kotoba-lang/io-buffer-writer.git"
+         :git/sha "c333eb123d0c50fffad65b89e7a8ad1069c2a2fe"}
+        io.github.kotoba-lang/io-byte-buffer
+        {:git/url "https://github.com/kotoba-lang/io-byte-buffer.git"
+         :git/sha "8e6d6d0b4a332c67a529c0956f787b1728733126"}
+        io.github.kotoba-lang/io-copy
+        {:git/url "https://github.com/kotoba-lang/io-copy.git"
+         :git/sha "b6f35174f4a6f9b4c7a051b611f02b829d294df5"}
+        io.github.kotoba-lang/io-len
+        {:git/url "https://github.com/kotoba-lang/io-len.git"
+         :git/sha "b66bd615ac613a0961138175e66a52cc7096c939"}
+        io.github.kotoba-lang/io-put
+        {:git/url "https://github.com/kotoba-lang/io-put.git"
+         :git/sha "a596965da23c620c16cfd28b210a0ca767dff097"}
+        io.github.kotoba-lang/io-reader-buffer
+        {:git/url "https://github.com/kotoba-lang/io-reader-buffer.git"
+         :git/sha "4a2768aed704074815e9488a73e0daf0c073ddb6"}
+        io.github.kotoba-lang/io-reader-seq
+        {:git/url "https://github.com/kotoba-lang/io-reader-seq.git"
+         :git/sha "d51d2ab2a138423930aba88cbc2883505552892d"}
+        io.github.kotoba-lang/io-to-bytes
+        {:git/url "https://github.com/kotoba-lang/io-to-bytes.git"
+         :git/sha "7a6920b80425c9b1004cff29f2c02d090844d2e3"}
+}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {io.github.cognitect-labs/test-runner
