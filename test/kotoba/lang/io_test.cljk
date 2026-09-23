@@ -1,5 +1,5 @@
 (ns kotoba.lang.io-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [kotoba.lang.io :as io]))
 
 (defn- byte-arr [coll]

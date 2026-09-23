@@ -1,5 +1,5 @@
 (ns kotoba.io-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [kotoba.io :as io]
             [kotoba.io.reader]))
 
