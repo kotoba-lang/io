@@ -1,0 +1,136 @@
+(ns kotoba.lang.io.file
+  "The portable subset of clojure.java.io: path construction and the two
+  filesystem operations that answer with a value rather than a stream.
+
+    file  as-file  as-relative-path  make-parents  delete-file
+
+  JVM: each var IS clojure.java.io's (delegation, not a re-implementation), so
+  a JVM caller gets the same java.io.File and the same exceptions as before.
+
+  ClojureScript on Node (the kbb engine): a file is its PATH STRING, built by
+  java.io.File's own normalisation (UnixFileSystem.normalize / resolve), so
+  `(str (file ...))` is the same string on both hosts. Measured against JVM
+  clojure.java.io 2026-09-24 (every literal in test/kotoba/lang/io/file_test):
+
+    (file \"a//b/\")      \"a/b\"        (file \"\" \"b\")   \"/b\"
+    (file \"a\" \"\")       \"a\"          (file \"\" \"\")    \"/\"
+    (file \"a\" \"/b\")     throws \"/b is not a relative path\"
+    (file \"a\" nil)      throws        (file nil \"b\")  \"b\"
+    (file \"./a/../b\")   \"./a/../b\"   (no .. resolution, unlike path.join)
+    (make-parents p)    true created / false already there or blocked / nil no parent
+    (delete-file p s)   true deleted (a file or an EMPTY directory) / s when s is
+                        truthy / otherwise throws \"Couldn't delete <p>\"
+
+  NOT here, on purpose (a caller of these keeps clojure.java.io; see
+  scripts/migrate-clojure-java-io-to-kotoba-io.cljk in com-junkawasaki/root):
+  reader writer input-stream output-stream (streams), resource (the JVM
+  classpath), as-url (java.net.URL), copy (kotoba.io/copy is the IReader/IWriter
+  drain, a different function), and every java.io.File METHOD -- on Node a file
+  is a string and has none of them."
+  #?(:clj (:require [clojure.java.io :as jio])))
+
+#?(:cljs (defn- node-fs [] (js/require "fs")))
+
+;; ---------------------------------------------------------------------------
+;; java.io.UnixFileSystem, transcribed
+;; ---------------------------------------------------------------------------
+
+#?(:cljs
+   (defn- normalize
+     "Collapse runs of `/`, drop a trailing `/` unless the path is `/`."
+     [s]
+     (let [t (.replace s (js/RegExp. "/+" "g") "/")]
+       (if (and (> (count t) 1) (.endsWith t "/")) (subs t 0 (dec (count t))) t))))
+
+#?(:cljs
+   (defn- resolve-child
+     [parent child]
+     (cond
+       (= "" child) parent
+       (.startsWith child "/") (if (= "/" parent) child (str parent child))
+       (= "/" parent) (str parent child)
+       :else (str parent "/" child))))
+
+#?(:cljs
+   (defn- absolute? [p] (.startsWith p "/")))
+
+#?(:cljs
+   (defn- parent-of
+     "java.io.File#getParent: nil for `a`, `/` for `/a`, nil for `/`."
+     [p]
+     (let [prefix (if (absolute? p) 1 0)
+           i (.lastIndexOf p "/")]
+       (if (< i prefix)
+         (when (and (pos? prefix) (> (count p) prefix)) (subs p 0 prefix))
+         (subs p 0 i)))))
+
+;; ---------------------------------------------------------------------------
+;; the public surface
+;; ---------------------------------------------------------------------------
+
+(defn as-file
+  "clojure.java.io/as-file. JVM: a java.io.File. Node: the normalised path
+  string. nil -> nil."
+  [x]
+  #?(:clj (jio/as-file x)
+     :cljs (cond
+             (nil? x) nil
+             (string? x) (normalize x)
+             :else (throw (ex-info (str "No implementation of method: :as-file of protocol: "
+                                        "#'clojure.java.io/Coercions found for class: " (type x))
+                                   {:kotoba.io/op :as-file :value x})))))
+
+(defn as-relative-path
+  "clojure.java.io/as-relative-path: the path, or throws when it is absolute."
+  [x]
+  #?(:clj (jio/as-relative-path x)
+     :cljs (let [f (as-file x)]
+             (cond
+               (nil? f) (throw (ex-info "as-relative-path of nil" {:kotoba.io/op :as-relative-path}))
+               (absolute? f) (throw (ex-info (str f " is not a relative path")
+                                             {:kotoba.io/op :as-relative-path :path f}))
+               :else f))))
+
+(defn file
+  "clojure.java.io/file. JVM: a java.io.File. Node: its path string."
+  ([arg]
+   #?(:clj (jio/file arg)
+      :cljs (as-file arg)))
+  ([parent child]
+   #?(:clj (jio/file parent child)
+      :cljs (let [p (as-file parent)
+                  c (as-relative-path child)]
+              (cond
+                (nil? p) c
+                (= "" p) (resolve-child "/" c)
+                :else (resolve-child p c)))))
+  ([parent child & more]
+   (reduce file (file parent child) more)))
+
+(defn make-parents
+  "clojure.java.io/make-parents: mkdir -p the parent of (apply file f more).
+  true when directories were created, false when they already existed or
+  could not be made, nil when the path has no parent."
+  [f & more]
+  #?(:clj (apply jio/make-parents f more)
+     :cljs (when-let [parent (parent-of (apply file f more))]
+             (let [fs (node-fs)]
+               (if (.existsSync fs parent)
+                 false
+                 (try (.mkdirSync fs parent #js {:recursive true}) true
+                      (catch :default _ false)))))))
+
+(defn delete-file
+  "clojure.java.io/delete-file: delete a file or an EMPTY directory. true on
+  success; otherwise `silently` when it is truthy, else throws
+  \"Couldn't delete <f>\"."
+  [f & [silently]]
+  #?(:clj (jio/delete-file f silently)
+     :cljs (let [p (file f)
+                 fs (node-fs)
+                 deleted? (try (let [st (.lstatSync fs p)]
+                                 (if (.isDirectory st) (.rmdirSync fs p) (.unlinkSync fs p))
+                                 true)
+                               (catch :default _ false))]
+             (or deleted? silently
+                 (throw (ex-info (str "Couldn't delete " f) {:kotoba.io/op :delete-file :path p}))))))

@@ -27,6 +27,16 @@ endpoints.
 - `copy` — drain a reader into a writer (pure reduction)
 - `reader-seq` — lazy seq from a reader
 
+`kotoba.lang.io.file` (re-exported by `kotoba.io`) — the portable subset of
+`clojure.java.io`: `file`, `as-file`, `as-relative-path`, `make-parents`,
+`delete-file`. On the JVM each is clojure.java.io's own var (a `java.io.File`);
+on Node (kbb) a file is its path string, normalised exactly as `java.io.File`
+normalises it, so `(str (file ...))` is the same on both hosts (the test
+literals were measured on JVM clojure.java.io). Streams (`reader`, `writer`,
+`input-stream`, `output-stream`), `resource`, `as-url`, `copy` and every
+`java.io.File` method are deliberately absent: `kotoba.io/copy` above is a
+different function.
+
 ## Install
 
 ```clojure
