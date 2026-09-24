@@ -30,11 +30,16 @@
             [kotoba.io.reader-buffer :as reader-buffer-ns]
             [kotoba.io.reader-seq :as reader-seq-ns]
             [kotoba.io.to-bytes :as to-bytes-ns]
-            [kotoba.lang.io.file :as file-ns]))
+            [kotoba.lang.io.file :as file-ns]
+            [kotoba.lang.io.stream :as stream-ns]))
 
 (def buffer-writer "See kotoba.io.buffer-writer/buffer-writer." buffer-writer-ns/buffer-writer)
 (def byte-buffer "See kotoba.io.byte-buffer/byte-buffer." byte-buffer-ns/byte-buffer)
-(def copy "See kotoba.io.copy/copy." copy-ns/copy)
+;; copy: kotoba.lang.io.stream/copy -- kotoba.io.copy/copy (drain an IReader
+;; into an IWriter) when the input implements kotoba.io.reader/Reader, exactly
+;; as before; otherwise clojure.java.io/copy (strings, byte arrays, files,
+;; streams, readers, writers). copy-ns is still what the first case calls.
+(def copy "See kotoba.lang.io.stream/copy (and kotoba.io.copy/copy)." stream-ns/copy)
 (def len "See kotoba.io.len/len." len-ns/len)
 (def put "See kotoba.io.put/put." put-ns/put)
 (def read! "See kotoba.io.reader/read!." ireader-ns/read!)
@@ -44,15 +49,23 @@
 (def write! "See kotoba.io.writer/write!." iwriter-ns/write!)
 
 ;; The clojure.java.io-compatible portable subset (kotoba.lang.io.file, in
-;; this repo): a `.cljk` consumer of clojure.java.io that uses only these five
-;; is moved here by scripts/migrate-clojure-java-io-to-kotoba-io.cljk
-;; (com-junkawasaki/root). `copy` above is NOT clojure.java.io/copy -- it
-;; drains an IReader into an IWriter -- so a caller of that one is not moved.
+;; this repo): a `.cljk` consumer of clojure.java.io is moved here by
+;; scripts/migrate-clojure-java-io-to-kotoba-io.cljk (com-junkawasaki/root).
+;; `copy` above is clojure.java.io/copy too, for any input that is not an
+;; IReader (kotoba.lang.io.stream, 2026-09-25).
 (def file "See kotoba.lang.io.file/file." file-ns/file)
 (def as-file "See kotoba.lang.io.file/as-file." file-ns/as-file)
 (def as-relative-path "See kotoba.lang.io.file/as-relative-path." file-ns/as-relative-path)
 (def make-parents "See kotoba.lang.io.file/make-parents." file-ns/make-parents)
 (def delete-file "See kotoba.lang.io.file/delete-file." file-ns/delete-file)
+
+;; clojure.java.io's classpath lookup and stream makers (kotoba.lang.io.stream,
+;; 2026-09-25): the JVM's own on the JVM, the kbb engine's own on kbb.
+(def resource "See kotoba.lang.io.stream/resource." stream-ns/resource)
+(def reader "See kotoba.lang.io.stream/reader." stream-ns/reader)
+(def writer "See kotoba.lang.io.stream/writer." stream-ns/writer)
+(def input-stream "See kotoba.lang.io.stream/input-stream." stream-ns/input-stream)
+(def output-stream "See kotoba.lang.io.stream/output-stream." stream-ns/output-stream)
 
 ;; The java.io.File METHODS as functions of a file value (kotoba.lang.io.file):
 ;; scripts/migrate-java-io-file-interop-to-kotoba-io.cljk (com-junkawasaki/root)

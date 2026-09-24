@@ -16,9 +16,10 @@
             [kotoba.lang.io.file-test]
             [kotoba.lang.io.file-ops-test]
             [kotoba.lang.io.files-test]
+            [kotoba.lang.io.stream-test]
             ))
 
 (defmethod t/report [:cljs.test/default :end-run-tests] [m]
   (when-not (t/successful? m) (js/process.exit 1)))
 
-(t/run-tests 'kotoba.lang.io-test 'kotoba.lang.io.file-test 'kotoba.lang.io.file-ops-test 'kotoba.lang.io.files-test)
+(t/run-tests 'kotoba.lang.io-test 'kotoba.lang.io.file-test 'kotoba.lang.io.file-ops-test 'kotoba.lang.io.files-test 'kotoba.lang.io.stream-test)
