@@ -4,7 +4,25 @@ All notable changes to kotoba-lang/io are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/). Semver per the
 kotoba-lang stdlib compatibility policy (kotoba-lang/kotoba-lang/docs/lang/stdlib-versioning.md).
 
-## [Unreleased] - 2026-09-24
+## [Unreleased] - 2026-09-25
+
+### Added
+
+- `kotoba.lang.io.stream` / `kotoba.io`: `resource` `reader` `writer`
+  `input-stream` `output-stream` -- clojure.java.io's; JVM delegates, the kbb
+  engine uses its own clojure.java.io implementation (classpath lookup,
+  JDK-checked streams). Parity golden measured with JDK 21 raw
+  clojure.java.io (test/kotoba/lang/io/stream_test.cljk).
+
+### Changed
+
+- `kotoba.io/copy` is now `kotoba.lang.io.stream/copy`: an input that
+  implements `kotoba.io.reader/Reader` is drained into the IWriter exactly as
+  before (kotoba.io.copy/copy); any other input is clojure.java.io/copy
+  (strings, byte arrays, files, streams, readers, writers). A kotoba file
+  value as the OUTPUT names the file on both hosts.
+
+## 2026-09-24
 
 ### Added
 

@@ -32,9 +32,19 @@ endpoints.
 `delete-file`. On the JVM each is clojure.java.io's own var (a `java.io.File`);
 on Node (kbb) a file is its path string, normalised exactly as `java.io.File`
 normalises it, so `(str (file ...))` is the same on both hosts (the test
-literals were measured on JVM clojure.java.io). Streams (`reader`, `writer`,
-`input-stream`, `output-stream`), `resource`, `as-url` and `copy` are
-deliberately absent: `kotoba.io/copy` above is a different function.
+literals were measured on JVM clojure.java.io).
+
+`kotoba.lang.io.stream` (re-exported by `kotoba.io`) — `resource`, `reader`,
+`writer`, `input-stream`, `output-stream` and `copy` with clojure.java.io's
+contract: the JVM's own vars on the JVM, the kbb engine's own implementation
+of them on kbb (the stream objects its `with-open` / `line-seq` / `slurp`
+accept; `resource` is its classpath lookup, a js/URL). `kotoba.io/copy`
+drains an IReader into an IWriter exactly as before when the input is a
+`kotoba.io.reader/Reader`, and is clojure.java.io/copy otherwise. Parity
+golden measured against raw clojure.java.io on JDK 21
+(test/kotoba/lang/io/stream_test.cljk). Not portable: a file value as copy's
+INPUT (on Node it is the path string, which copy reads as content -- use
+`(copy (input-stream f) out)`), and `as-url` (absent).
 
 The `java.io.File` methods, as functions of a file value (same namespaces):
 `exists?` `file?` `directory?` `hidden?` `absolute?` `file-name` `path`
