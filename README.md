@@ -33,9 +33,20 @@ endpoints.
 on Node (kbb) a file is its path string, normalised exactly as `java.io.File`
 normalises it, so `(str (file ...))` is the same on both hosts (the test
 literals were measured on JVM clojure.java.io). Streams (`reader`, `writer`,
-`input-stream`, `output-stream`), `resource`, `as-url`, `copy` and every
-`java.io.File` method are deliberately absent: `kotoba.io/copy` above is a
-different function.
+`input-stream`, `output-stream`), `resource`, `as-url` and `copy` are
+deliberately absent: `kotoba.io/copy` above is a different function.
+
+The `java.io.File` methods, as functions of a file value (same namespaces):
+`exists?` `file?` `directory?` `hidden?` `absolute?` `file-name` `path`
+`parent` `parent-file` `absolute-path` `absolute-file` `canonical-path`
+`canonical-file` `mkdir` `mkdirs` `delete` `create-new-file` `rename-to`
+`length` `last-modified` `set-last-modified` `list-names` `list-files`
+`can-read?` `can-write?` `can-execute?` and `file-seq`. On the JVM each IS
+the method; on Node each is `java.io.UnixFileSystem` transcribed, checked
+against a golden measured with raw `java.io.File`
+(`test/kotoba/lang/io/file_ops_test.cljk`). Methods with no portable answer
+(`toPath` `toURI` `toURL` `deleteOnExit` `compareTo` `get*Space`
+`set*able` `setReadOnly`) are absent.
 
 ## Install
 

@@ -19,6 +19,7 @@
   protocol name stays in the one repo that declares it. Requiring that repo
   is a compile error away; a copy would not be.
 "
+  (:refer-clojure :exclude [file-seq])
   (:require [kotoba.io.reader :as ireader-ns]
             [kotoba.io.writer :as iwriter-ns]
             [kotoba.io.buffer-writer :as buffer-writer-ns]
@@ -52,3 +53,34 @@
 (def as-relative-path "See kotoba.lang.io.file/as-relative-path." file-ns/as-relative-path)
 (def make-parents "See kotoba.lang.io.file/make-parents." file-ns/make-parents)
 (def delete-file "See kotoba.lang.io.file/delete-file." file-ns/delete-file)
+
+;; The java.io.File METHODS as functions of a file value (kotoba.lang.io.file):
+;; scripts/migrate-java-io-file-interop-to-kotoba-io.cljk (com-junkawasaki/root)
+;; rewrites `(.exists f)` -> `(io/exists? f)` etc. with these.
+(def exists? "See kotoba.lang.io.file/exists?." file-ns/exists?)
+(def file? "See kotoba.lang.io.file/file?." file-ns/file?)
+(def directory? "See kotoba.lang.io.file/directory?." file-ns/directory?)
+(def hidden? "See kotoba.lang.io.file/hidden?." file-ns/hidden?)
+(def absolute? "See kotoba.lang.io.file/absolute?." file-ns/absolute?)
+(def file-name "See kotoba.lang.io.file/file-name." file-ns/file-name)
+(def path "See kotoba.lang.io.file/path." file-ns/path)
+(def parent "See kotoba.lang.io.file/parent." file-ns/parent)
+(def parent-file "See kotoba.lang.io.file/parent-file." file-ns/parent-file)
+(def absolute-path "See kotoba.lang.io.file/absolute-path." file-ns/absolute-path)
+(def absolute-file "See kotoba.lang.io.file/absolute-file." file-ns/absolute-file)
+(def canonical-path "See kotoba.lang.io.file/canonical-path." file-ns/canonical-path)
+(def canonical-file "See kotoba.lang.io.file/canonical-file." file-ns/canonical-file)
+(def mkdir "See kotoba.lang.io.file/mkdir." file-ns/mkdir)
+(def mkdirs "See kotoba.lang.io.file/mkdirs." file-ns/mkdirs)
+(def delete "See kotoba.lang.io.file/delete." file-ns/delete)
+(def create-new-file "See kotoba.lang.io.file/create-new-file." file-ns/create-new-file)
+(def rename-to "See kotoba.lang.io.file/rename-to." file-ns/rename-to)
+(def length "See kotoba.lang.io.file/length." file-ns/length)
+(def last-modified "See kotoba.lang.io.file/last-modified." file-ns/last-modified)
+(def set-last-modified "See kotoba.lang.io.file/set-last-modified." file-ns/set-last-modified)
+(def list-names "See kotoba.lang.io.file/list-names." file-ns/list-names)
+(def list-files "See kotoba.lang.io.file/list-files." file-ns/list-files)
+(def can-read? "See kotoba.lang.io.file/can-read?." file-ns/can-read?)
+(def can-write? "See kotoba.lang.io.file/can-write?." file-ns/can-write?)
+(def can-execute? "See kotoba.lang.io.file/can-execute?." file-ns/can-execute?)
+(def file-seq "See kotoba.lang.io.file/file-seq." file-ns/file-seq)
