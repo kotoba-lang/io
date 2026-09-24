@@ -48,6 +48,16 @@ against a golden measured with raw `java.io.File`
 (`toPath` `toURI` `toURL` `deleteOnExit` `compareTo` `get*Space`
 `set*able` `setReadOnly`) are absent.
 
+Ambient `java.nio.file.Files` (same namespaces), paths in and out as file
+values, never `java.nio.file.Path`: `temp-dir` (`createTempDirectory`),
+`temp-file` (`createTempFile`, nil suffix = `.tmp`), `read-all-bytes` (a host
+byte array: `byte[]` / `Int8Array`), `write-bytes` and `write-string` (UTF-8;
+options `:append` `:create` `:truncate-existing` `:write`, none = the JDK
+default), `delete-if-exists`. On the JVM each IS the `Files` method; on Node
+the same syscalls, name shape and exception messages (ex-info naming the JDK
+class), checked against a golden measured with raw `Files`
+(`test/kotoba/lang/io/files_test.cljk`).
+
 ## Install
 
 ```clojure

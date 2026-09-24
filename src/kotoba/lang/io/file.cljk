@@ -450,3 +450,240 @@
   [dir]
   #?(:clj (clojure.core/file-seq (jio/as-file dir))
      :cljs (tree-seq directory? (fn [d] (seq (list-files d))) (as-file dir))))
+
+;; ---------------------------------------------------------------------------
+;; java.nio.file.Files, ambient: temp files, whole-file bytes, delete-if-exists
+;;
+;;   temp-dir         Files/createTempDirectory  ([prefix] [dir prefix])
+;;   temp-file        Files/createTempFile       ([prefix suffix] [dir prefix suffix])
+;;   read-all-bytes   Files/readAllBytes
+;;   write-bytes      Files/write (Path, byte[], OpenOption...)
+;;   write-string     Files/writeString (Path, CharSequence, UTF_8, OpenOption...)
+;;   delete-if-exists Files/deleteIfExists
+;;
+;; A path argument is a file value (what `file` makes) or a path string; a
+;; returned path is a file value (java.io.File on the JVM, its path string on
+;; Node) -- never a java.nio.file.Path. No FileAttribute: the JDK's default
+;; for temp files (0600) and temp directories (0700) is what both hosts give.
+;; Open options are a collection of keywords, the subset of
+;; StandardOpenOption that means the same on both hosts:
+;;
+;;   :append :create :truncate-existing :write
+;;
+;; none given = the JDK default, CREATE + TRUNCATE_EXISTING + WRITE.
+;;
+;; JVM: each IS the Files method (the same exceptions). Node: the same
+;; syscalls (mkdir 0700, open O_CREAT|O_EXCL 0600, open with the option
+;; flags 0666, lstat + unlink/rmdir), the name TempFileHelper makes (prefix +
+;; an unsigned random long in decimal + suffix, a suffix of nil = ".tmp" for
+;; files), and the JDK's exceptions as ex-info whose message is the JDK
+;; exception's getMessage and whose ex-data :kotoba.io/exception names its
+;; class. read-all-bytes answers a host byte array: byte[] on the JVM, an
+;; Int8Array on Node (what kbb's (.getBytes s) gives -- signed, like byte[]).
+;; Measured against JDK 21 in test/kotoba/lang/io/files_test.cljk.
+;; ---------------------------------------------------------------------------
+
+#?(:clj
+   (defn- nio-path ^java.nio.file.Path [f]
+     (.toPath ^java.io.File (jio/as-file f))))
+
+#?(:clj
+   (def ^:private no-attrs (make-array java.nio.file.attribute.FileAttribute 0)))
+
+#?(:clj
+   (def ^:private open-option
+     {:append java.nio.file.StandardOpenOption/APPEND
+      :create java.nio.file.StandardOpenOption/CREATE
+      :truncate-existing java.nio.file.StandardOpenOption/TRUNCATE_EXISTING
+      :write java.nio.file.StandardOpenOption/WRITE}))
+
+(def ^:private open-option-keys #{:append :create :truncate-existing :write})
+
+(defn- check-options! [opts]
+  (doseq [o opts]
+    (when-not (contains? open-option-keys o)
+      (throw (ex-info (str "Unsupported open option " (pr-str o) " (kotoba.io supports "
+                           ":append :create :truncate-existing :write)")
+                      {:kotoba.io/op :write :option o}))))
+  opts)
+
+#?(:clj
+   (defn- open-options ^"[Ljava.nio.file.OpenOption;" [opts]
+     (into-array java.nio.file.OpenOption (map open-option (check-options! opts)))))
+
+#?(:cljs
+   (def ^:private strerror
+     {"ENOTDIR" "Not a directory" "EISDIR" "Is a directory" "EPERM" "Operation not permitted"
+      "ELOOP" "Too many levels of symbolic links or unable to access attributes of symbolic link"
+      "ENAMETOOLONG" "File name too long" "EROFS" "Read-only file system"
+      "ENOSPC" "No space left on device" "EBUSY" "Resource busy" "EINVAL" "Invalid argument"}))
+
+#?(:cljs
+   (defn- nio-ex
+     "UnixException.translateToIOException, as ex-info: the JDK class in
+     :kotoba.io/exception and its getMessage as the message."
+     [e p op]
+     (let [code (.-code e)
+           [cls msg] (case code
+                       "ENOENT" ["java.nio.file.NoSuchFileException" p]
+                       "EEXIST" ["java.nio.file.FileAlreadyExistsException" p]
+                       "EACCES" ["java.nio.file.AccessDeniedException" p]
+                       ["java.nio.file.FileSystemException"
+                        (str p ": " (or (get strerror code) (.-message e)))])]
+       (ex-info msg {:kotoba.io/op op :kotoba.io/exception cls :path p :code code}))))
+
+#?(:cljs
+   (defn- nio-path!
+     "The path string of a file value, or throw as the JDK does on null."
+     [f op]
+     (if (nil? f)
+       (throw (ex-info "Cannot invoke \"java.io.File.toPath()\" because the file is null"
+                       {:kotoba.io/op op :kotoba.io/exception "java.lang.NullPointerException"}))
+       (as-file f))))
+
+#?(:cljs
+   (defn- temp-name
+     "TempFileHelper.generatePath's name: prefix + an unsigned random long in
+     decimal + suffix, which must be a simple file name after normalisation."
+     [prefix suffix]
+     (let [n (.toString (.readBigUInt64BE (.randomBytes (js/require "crypto") 8)))
+           s (normalize (str (or prefix "") n suffix))]
+       (if (.includes s "/")
+         (throw (ex-info "Invalid prefix or suffix"
+                         {:kotoba.io/op :temp :kotoba.io/exception "java.lang.IllegalArgumentException"
+                          :prefix prefix :suffix suffix}))
+         s))))
+
+#?(:cljs
+   (defn- default-tmp [] (normalize (.tmpdir (js/require "os")))))
+
+#?(:cljs
+   (defn- create-temp!
+     "Retry on a name collision, as TempFileHelper does."
+     [dir prefix suffix make!]
+     (loop []
+       (let [p (resolve-child dir (temp-name prefix suffix))
+             r (try (make! p) p
+                    (catch :default e
+                      (if (= "EEXIST" (.-code e)) ::again (throw (nio-ex e p :temp)))))]
+         (if (= ::again r) (recur) r)))))
+
+(defn temp-dir
+  "Files/createTempDirectory: a new directory (mode 0700) named prefix + a
+  random number, in `dir` or the host's temporary directory
+  (java.io.tmpdir / os.tmpdir()). A nil prefix is \"\". Returns the file value."
+  ([prefix]
+   #?(:clj (.toFile (java.nio.file.Files/createTempDirectory ^String prefix ^"[Ljava.nio.file.attribute.FileAttribute;" no-attrs))
+      :cljs (create-temp! (default-tmp) prefix "" #(.mkdirSync (node-fs) % 448))))
+  ([dir prefix]
+   #?(:clj (.toFile (java.nio.file.Files/createTempDirectory (nio-path dir) ^String prefix ^"[Ljava.nio.file.attribute.FileAttribute;" no-attrs))
+      :cljs (create-temp! (nio-path! dir :temp-dir) prefix "" #(.mkdirSync (node-fs) % 448)))))
+
+#?(:cljs
+   (defn- make-file! [p] (.closeSync (node-fs) (.openSync (node-fs) p "wx" 384))))
+
+(defn temp-file
+  "Files/createTempFile: a new empty file (mode 0600) named prefix + a random
+  number + suffix (nil suffix = \".tmp\"), in `dir` or the host's temporary
+  directory. Returns the file value."
+  ([prefix suffix]
+   #?(:clj (.toFile (java.nio.file.Files/createTempFile ^String prefix ^String suffix ^"[Ljava.nio.file.attribute.FileAttribute;" no-attrs))
+      :cljs (create-temp! (default-tmp) prefix (if (nil? suffix) ".tmp" suffix) make-file!)))
+  ([dir prefix suffix]
+   #?(:clj (.toFile (java.nio.file.Files/createTempFile (nio-path dir) ^String prefix ^String suffix ^"[Ljava.nio.file.attribute.FileAttribute;" no-attrs))
+      :cljs (create-temp! (nio-path! dir :temp-file) prefix (if (nil? suffix) ".tmp" suffix) make-file!))))
+
+(defn read-all-bytes
+  "Files/readAllBytes: the file's bytes as a host byte array (byte[] on the
+  JVM, Int8Array on Node)."
+  [f]
+  #?(:clj (java.nio.file.Files/readAllBytes (nio-path f))
+     :cljs (let [p (nio-path! f :read-all-bytes)
+                 b (try (.readFileSync (node-fs) p)
+                        (catch :default e
+                          (throw (if (= "EISDIR" (.-code e))
+                                   ;; the JDK opens a directory, then read(2) fails
+                                   (ex-info "Is a directory" {:kotoba.io/op :read-all-bytes :kotoba.io/exception "java.io.IOException" :path p})
+                                   (nio-ex e p :read-all-bytes)))))]
+             (js/Int8Array. (.-buffer b) (.-byteOffset b) (.-byteLength b)))))
+
+#?(:cljs
+   (defn- node-write!
+     "Files.newOutputStream's option rules, then open(2) with their flags."
+     [p buf opts op]
+     (let [o (set (check-options! opts))
+           dflt? (empty? o)
+           create? (or dflt? (contains? o :create))
+           trunc? (or dflt? (contains? o :truncate-existing))
+           append? (contains? o :append)]
+       (when (and append? trunc?)
+         (throw (ex-info "APPEND + TRUNCATE_EXISTING not allowed"
+                         {:kotoba.io/op op :kotoba.io/exception "java.lang.IllegalArgumentException"})))
+       (let [fs (node-fs) c (.-constants fs)
+             flags (bit-or (.-O_WRONLY c) (if create? (.-O_CREAT c) 0) (if trunc? (.-O_TRUNC c) 0)
+                           (if append? (.-O_APPEND c) 0))
+             fd (try (.openSync fs p flags 438)
+                     (catch :default e (throw (nio-ex e p op))))]
+         (try
+           (loop [off 0]
+             (when (< off (.-length buf))
+               (recur (+ off (.writeSync fs fd buf off (- (.-length buf) off))))))
+           (finally (.closeSync fs fd)))
+         p))))
+
+#?(:cljs
+   (defn- ->u8 [b]
+     (cond
+       (nil? b) (throw (ex-info "Cannot read the array length because \"bytes\" is null"
+                                {:kotoba.io/op :write-bytes :kotoba.io/exception "java.lang.NullPointerException"}))
+       (js/ArrayBuffer.isView b) (js/Uint8Array. (.-buffer b) (.-byteOffset b) (.-byteLength b))
+       :else (js/Uint8Array.from (clj->js (map #(bit-and % 0xff) b))))))
+
+(defn write-bytes
+  "Files/write (Path, byte[], OpenOption...): write `bytes` (byte[] on the
+  JVM; on Node a typed array or a sequence of byte values) to f. `opts` is a
+  collection of :append :create :truncate-existing :write; none = CREATE +
+  TRUNCATE_EXISTING + WRITE. Returns the file value."
+  ([f bytes] (write-bytes f bytes nil))
+  ([f bytes opts]
+   #?(:clj (.toFile (java.nio.file.Files/write (nio-path f) ^bytes bytes (open-options opts)))
+      :cljs (as-file (node-write! (nio-path! f :write-bytes) (->u8 bytes) opts :write-bytes)))))
+
+(defn write-string
+  "Files/writeString (Path, CharSequence, UTF_8, OpenOption...): `s` encoded
+  as UTF-8; a string that is not well-formed UTF-16 (a lone surrogate) throws,
+  as the JDK encoder does (UnmappableCharacterException, \"Input length = 1\"). Options as write-bytes. Returns the file value."
+  ([f s] (write-string f s nil))
+  ([f s opts]
+   #?(:clj (.toFile (java.nio.file.Files/writeString (nio-path f) ^CharSequence s java.nio.charset.StandardCharsets/UTF_8
+                                                     (open-options opts)))
+      :cljs (let [p (nio-path! f :write-string)]
+              (when (nil? s)
+                (throw (ex-info "Cannot invoke \"java.lang.CharSequence.length()\" because \"csq\" is null"
+                                {:kotoba.io/op :write-string :kotoba.io/exception "java.lang.NullPointerException"})))
+              (when-not (.isWellFormed (str s))
+                (throw (ex-info "Input length = 1" {:kotoba.io/op :write-string
+                                                    :kotoba.io/exception "java.nio.charset.UnmappableCharacterException"})))
+              (as-file (node-write! p (js/Buffer.from (str s) "utf8") opts :write-string))))))
+
+(defn delete-if-exists
+  "Files/deleteIfExists: true when f (a file, a link -- not its target -- or an
+  EMPTY directory) was deleted, false when there was nothing. A non-empty
+  directory throws (DirectoryNotEmptyException; ex-info on Node)."
+  [f]
+  #?(:clj (java.nio.file.Files/deleteIfExists (nio-path f))
+     :cljs (let [p (nio-path! f :delete-if-exists) fs (node-fs)
+                 st (try (.lstatSync fs p)
+                         (catch :default e
+                           (if (= "ENOENT" (.-code e)) nil (throw (nio-ex e p :delete-if-exists)))))]
+             (if (nil? st)
+               false
+               (try (if (.isDirectory st) (.rmdirSync fs p) (.unlinkSync fs p))
+                    true
+                    (catch :default e
+                      (case (.-code e)
+                        "ENOENT" false
+                        ("ENOTEMPTY" "EEXIST")
+                        (throw (ex-info p {:kotoba.io/op :delete-if-exists :path p
+                                           :kotoba.io/exception "java.nio.file.DirectoryNotEmptyException"}))
+                        (throw (nio-ex e p :delete-if-exists)))))))))

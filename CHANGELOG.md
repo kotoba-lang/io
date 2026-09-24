@@ -8,6 +8,11 @@ kotoba-lang stdlib compatibility policy (kotoba-lang/kotoba-lang/docs/lang/stdli
 
 ### Added
 
+- `kotoba.lang.io.file` / `kotoba.io`: ambient java.nio.file.Files --
+  `temp-dir` `temp-file` `read-all-bytes` `write-bytes` `write-string`
+  `delete-if-exists`. File values in and out (no Path); open options as
+  keywords (`:append` `:create` `:truncate-existing` `:write`). JVM: the Files
+  method; Node: transcribed, parity golden measured with JDK 21 raw Files.
 - `kotoba.lang.io.file` (re-exported by `kotoba.io`): `file`, `as-file`,
   `as-relative-path`, `make-parents`, `delete-file` -- the portable subset of
   clojure.java.io. JVM delegates; Node answers with java.io.File's
