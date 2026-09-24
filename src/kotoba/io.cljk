@@ -84,3 +84,15 @@
 (def can-write? "See kotoba.lang.io.file/can-write?." file-ns/can-write?)
 (def can-execute? "See kotoba.lang.io.file/can-execute?." file-ns/can-execute?)
 (def file-seq "See kotoba.lang.io.file/file-seq." file-ns/file-seq)
+
+;; java.nio.file.Files, ambient (kotoba.lang.io.file): paths in and out are
+;; file values, never java.nio.file.Path.
+;; scripts/migrate-java-nio-file-files-to-kotoba-io.cljk (com-junkawasaki/root)
+;; rewrites `(Files/createTempDirectory "p" (make-array FileAttribute 0))` ->
+;; `(io/temp-dir "p")` etc. with these.
+(def temp-dir "See kotoba.lang.io.file/temp-dir." file-ns/temp-dir)
+(def temp-file "See kotoba.lang.io.file/temp-file." file-ns/temp-file)
+(def read-all-bytes "See kotoba.lang.io.file/read-all-bytes." file-ns/read-all-bytes)
+(def write-bytes "See kotoba.lang.io.file/write-bytes." file-ns/write-bytes)
+(def write-string "See kotoba.lang.io.file/write-string." file-ns/write-string)
+(def delete-if-exists "See kotoba.lang.io.file/delete-if-exists." file-ns/delete-if-exists)
