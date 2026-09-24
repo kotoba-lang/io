@@ -6,5 +6,7 @@
  {"run-tests.cljk" ".cljs"
   "src/kotoba/io.cljk" ".cljc"
   "src/kotoba/lang/io.cljk" ".cljc"
+  "src/kotoba/lang/io/file.cljk" ".cljc"
   "test/kotoba/io_test.cljk" ".cljc"
-  "test/kotoba/lang/io_test.cljk" ".cljc"}}
+  "test/kotoba/lang/io_test.cljk" ".cljc"
+  "test/kotoba/lang/io/file_test.cljk" ".cljc"}}

@@ -28,7 +28,8 @@
             [kotoba.io.put :as put-ns]
             [kotoba.io.reader-buffer :as reader-buffer-ns]
             [kotoba.io.reader-seq :as reader-seq-ns]
-            [kotoba.io.to-bytes :as to-bytes-ns]))
+            [kotoba.io.to-bytes :as to-bytes-ns]
+            [kotoba.lang.io.file :as file-ns]))
 
 (def buffer-writer "See kotoba.io.buffer-writer/buffer-writer." buffer-writer-ns/buffer-writer)
 (def byte-buffer "See kotoba.io.byte-buffer/byte-buffer." byte-buffer-ns/byte-buffer)
@@ -40,3 +41,14 @@
 (def reader-seq "See kotoba.io.reader-seq/reader-seq." reader-seq-ns/reader-seq)
 (def to-bytes "See kotoba.io.to-bytes/to-bytes." to-bytes-ns/to-bytes)
 (def write! "See kotoba.io.writer/write!." iwriter-ns/write!)
+
+;; The clojure.java.io-compatible portable subset (kotoba.lang.io.file, in
+;; this repo): a `.cljk` consumer of clojure.java.io that uses only these five
+;; is moved here by scripts/migrate-clojure-java-io-to-kotoba-io.cljk
+;; (com-junkawasaki/root). `copy` above is NOT clojure.java.io/copy -- it
+;; drains an IReader into an IWriter -- so a caller of that one is not moved.
+(def file "See kotoba.lang.io.file/file." file-ns/file)
+(def as-file "See kotoba.lang.io.file/as-file." file-ns/as-file)
+(def as-relative-path "See kotoba.lang.io.file/as-relative-path." file-ns/as-relative-path)
+(def make-parents "See kotoba.lang.io.file/make-parents." file-ns/make-parents)
+(def delete-file "See kotoba.lang.io.file/delete-file." file-ns/delete-file)
