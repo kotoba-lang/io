@@ -56,7 +56,7 @@
 (def ^:private host-fs #?(:cljs (js/require "fs") :clj nil))
 
 (defn- tmp-dir []
-  #?(:clj (str (.toFile (java.nio.file.Files/createTempDirectory "kio-" (make-array java.nio.file.attribute.FileAttribute 0))))
+  #?(:clj (str (io/temp-dir "kio-"))
      :cljs (.mkdtempSync host-fs (str (.tmpdir (js/require "os")) "/kio-"))))
 
 (defn- exists? [p] #?(:clj (.exists (java.io.File. ^String p)) :cljs (.existsSync host-fs p)))
