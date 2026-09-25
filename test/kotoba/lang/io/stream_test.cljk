@@ -8,7 +8,7 @@
 
   Paths are relativised (<T> the fixture directory). Bytes are compared as
   signed byte values (byte[] on the JVM, Int8Array on Node)."
-  (:require [kotoba.test :refer [deftest is testing]]
+  (:require [kotoba.bytes :as kbytes] [kotoba.test :refer [deftest is testing]]
             [kotoba.io :as io]
             [kotoba.io.reader :as ir]
             [kotoba.io.writer :as iw]
@@ -22,16 +22,16 @@
 ;; ---------------------------------------------------------------------------
 
 (defn- tmp-dir []
-  #?(:clj (str (.toFile (java.nio.file.Files/createTempDirectory "kio-stream-" (make-array java.nio.file.attribute.FileAttribute 0))))
+  #?(:clj (str (io/temp-dir "kio-stream-"))
      :cljs (.mkdtempSync host-fs (str (.tmpdir (js/require "os")) "/kio-stream-"))))
 
 (defn- host-write! [p s] #?(:clj (spit p s) :cljs (.writeFileSync host-fs p s)))
 
 (defn- host-bytes [p]
-  #?(:clj (vec (java.nio.file.Files/readAllBytes (.toPath (java.io.File. ^String p))))
+  #?(:clj (vec (io/read-all-bytes (java.io.File. ^String p)))
      :cljs (let [b (.readFileSync host-fs p)] (vec (js/Int8Array. (.-buffer b) (.-byteOffset b) (.-byteLength b))))))
 
-(defn- host-text [p] #?(:clj (String. ^bytes (java.nio.file.Files/readAllBytes (.toPath (java.io.File. ^String p))) "UTF-8")
+(defn- host-text [p] #?(:clj (kbytes/utf8-string ^bytes (io/read-all-bytes (java.io.File. ^String p)))
                         :cljs (.readFileSync host-fs p "utf8")))
 
 (defn- thrown-msg [thunk]
