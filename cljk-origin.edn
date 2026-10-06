@@ -9,4 +9,8 @@
   "src/kotoba/lang/io/file.cljk" ".cljc"
   "test/kotoba/io_test.cljk" ".cljc"
   "test/kotoba/lang/io_test.cljk" ".cljc"
-  "test/kotoba/lang/io/file_test.cljk" ".cljc"}}
+  "test/kotoba/lang/io/file_test.cljk" ".cljc"
+  "src/kotoba/lang/io/stream.cljk" ".cljc"
+  "test/kotoba/lang/io/file_ops_test.cljk" ".cljc"
+  "test/kotoba/lang/io/files_test.cljk" ".cljc"
+  "test/kotoba/lang/io/stream_test.cljk" ".cljc"}}
